@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="国内商品与金融期货品种的资讯导航：按品种一键直达行情、持仓龙虎榜、股吧讨论、专家问答与视频搜索入口。">
+<title>期货品种资讯导航 · 按品种直达行情与持仓</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230D1420'/%3E%3Cg fill='%23fff'%3E%3Crect x='6' y='7' width='6' height='4' rx='1'/%3E%3Crect x='13' y='7' width='6' height='4' rx='1' opacity='.55'/%3E%3Crect x='20' y='7' width='6' height='4' rx='1'/%3E%3Crect x='6' y='13' width='6' height='4' rx='1' opacity='.55'/%3E%3Crect x='13' y='13' width='6' height='4' rx='1'/%3E%3Crect x='20' y='13' width='6' height='4' rx='1' opacity='.55'/%3E%3Crect x='6' y='19' width='6' height='4' rx='1'/%3E%3Crect x='13' y='19' width='6' height='4' rx='1' opacity='.55'/%3E%3Crect x='20' y='19' width='6' height='4' rx='1'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.1.0/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.1.0/500.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.1.0/600.css">
+<style>
+/* ============================================================
+   设计令牌
+   方向：交易台「品种矩阵」。整页像一块印刷精良的行情板——
+   发丝分隔线、表格化对齐、等宽数字；色彩只有一个来源：
+   交易所品牌色（它是信息，不是装饰）。
+   ============================================================ */
+:root{
+  color-scheme: light;
+  --paper:#EDF0ED;
+  --surface:#FFFFFF;
+  --sunken:#F5F7F5;
+  --ink:#0D1420;
+  --ink-2:#49535F;
+  --ink-3:#828C99;
+  --line:#DCE1DB;
+  --line-2:#C2C9C0;
+  --rule:#0D1420;
+  --focus:#1D5FE0;
+  --shadow:0 1px 2px rgba(13,20,32,.06), 0 12px 28px -18px rgba(13,20,32,.35);
+
+  /* 交易所识别色 —— 全站唯一的色彩语义 */
+  --shfe:#B5342A;
+  --ine:#0E6B63;
+  --dce:#1C6E44;
+  --czce:#A04A08;
+  --cffex:#4F36C4;
+  --gfex:#0C6683;
+
+  /* 链接分组色 */
+  --g-quote:#1D5FE0;
+  --g-board:#C0352B;
+  --g-hold:#9A5409;
+  --g-info:#1C6E44;
+  --g-extra:#6538C4;
+
+  --font-ui:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Hiragino Sans GB",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans CJK SC",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Cascadia Mono",monospace;
+
+  --r:4px;
+  --gut:18px;
+  --inspector-w:392px;
+  /* 矩阵列数：显式给定，保证各交易所分区的最后一行都不会只剩 1 个
+     （6 / 5 / 3 三种取值对 20、23、27、8、5 这几个品种数都成立） */
+  --cols:6;
+}
+[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#090D13;
+  --surface:#111823;
+  --sunken:#0D131C;
+  --ink:#E8EDF3;
+  --ink-2:#98A4B2;
+  --ink-3:#6B7684;
+  --line:#1E2732;
+  --line-2:#2E3A47;
+  --rule:#E8EDF3;
+  --focus:#5B9CFF;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 34px -20px rgba(0,0,0,.9);
+  --shfe:#F2705F;
+  --ine:#4FC9B9;
+  --dce:#5BC98A;
+  --czce:#E0A04A;
+  --cffex:#A394FF;
+  --gfex:#57C4E0;
+  --g-quote:#6E9CFF;
+  --g-board:#F2705F;
+  --g-hold:#E0A156;
+  --g-info:#5BC98A;
+  --g-extra:#AE92FF;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:var(--font-ui);
+  color:var(--ink);
+  background:var(--paper);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-wrap:break-word;
+}
+h1,h2,h3,p,dl,dd,dt{margin:0}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:2px}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+.app{max-width:1420px;margin:0 auto;padding:0 26px 44px}
+
+/* ============================ 眉标 ============================ */
+.mast{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:24px;flex-wrap:wrap;
+  padding:34px 0 18px;
+  border-bottom:2px solid var(--rule);
+}
+.mast__id{display:flex;align-items:center;gap:14px;min-width:0}
+.mark{
+  width:46px;height:46px;flex:none;border-radius:9px;
+  background:var(--rule);color:var(--paper);
+  display:grid;place-items:center;
+}
+[data-theme="dark"] .mark{color:#0D1420}
+.mark svg{width:24px;height:24px}
+.mast h1{
+  font-size:clamp(20px,2.4vw,26px);font-weight:800;
+  letter-spacing:.02em;line-height:1.2;
+}
+.mast__sub{font-size:13px;color:var(--ink-2);margin-top:3px}
+.mast__right{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap}
+.readout{display:flex;gap:26px}
+.readout div{text-align:right}
+.readout dt{font-size:11px;color:var(--ink-3);letter-spacing:.06em}
+.readout dd{
+  font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+  font-size:24px;font-weight:600;line-height:1.15;margin-top:1px;
+}
+.iconbtn{
+  width:38px;height:38px;flex:none;display:grid;place-items:center;
+  background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);
+  cursor:pointer;transition:border-color .14s,background .14s;
+}
+.iconbtn:hover{border-color:var(--rule)}
+.iconbtn svg{width:17px;height:17px}
+html[data-theme-mode="auto"] .ic-light,
+html[data-theme-mode="auto"] .ic-dark,
+html[data-theme-mode="light"] .ic-auto,
+html[data-theme-mode="light"] .ic-dark,
+html[data-theme-mode="dark"] .ic-auto,
+html[data-theme-mode="dark"] .ic-light{display:none}
+
+/* ============================ 工具条 ============================ */
+.toolswrap{
+  position:sticky;top:0;z-index:40;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+}
+.tools{padding:14px 0 13px;display:grid;grid-template-columns:minmax(0,1fr);gap:11px}
+.tools__row{display:flex;gap:11px;align-items:center;flex-wrap:wrap;min-width:0}
+
+.search{position:relative;flex:1 1 300px;min-width:0;display:block}
+.search > svg{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:15px;height:15px;color:var(--ink-3);pointer-events:none;
+}
+#q{
+  width:100%;padding:10px 62px 10px 35px;
+  font-family:var(--font-ui);font-size:14px;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);
+  outline:none;transition:border-color .14s,box-shadow .14s;
+}
+#q::placeholder{color:var(--ink-3)}
+#q:focus{border-color:var(--focus);box-shadow:0 0 0 3px color-mix(in oklab,var(--focus) 16%,transparent)}
+.search kbd{
+  position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);
+  background:var(--sunken);border:1px solid var(--line);border-radius:3px;
+  padding:1px 5px;pointer-events:none;
+}
+#clr{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  width:22px;height:22px;display:none;place-items:center;
+  background:var(--sunken);border:1px solid var(--line-2);border-radius:50%;
+  cursor:pointer;line-height:1;font-size:13px;color:var(--ink-2);padding:0;
+}
+#clr:hover{background:var(--surface);color:var(--ink)}
+.search.has-val #clr{display:grid}
+.search.has-val kbd{display:none}
+
+.seg{display:flex;background:var(--sunken);border:1px solid var(--line-2);border-radius:var(--r);padding:2px;min-width:0}
+.seg button{
+  border:0;background:transparent;color:var(--ink-2);
+  font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:3px;
+  cursor:pointer;transition:background .14s,color .14s;white-space:nowrap;
+}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(13,20,32,.12)}
+.seg .cnt{font-family:var(--font-mono);font-size:11px;opacity:.6;margin-left:3px}
+
+.exrow{display:flex;gap:7px;flex-wrap:wrap;align-items:center;min-width:0}
+.ebtn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);
+  padding:6px 11px;font-size:12.5px;font-weight:600;color:var(--ink-2);
+  cursor:pointer;transition:border-color .14s,color .14s,background .14s;
+}
+.ebtn:hover{border-color:var(--rule);color:var(--ink)}
+.ebtn[aria-pressed="true"]{background:var(--rule);border-color:var(--rule);color:var(--paper)}
+[data-theme="dark"] .ebtn[aria-pressed="true"]{color:#0D1420}
+.ebtn .swatch{width:8px;height:8px;flex:none;border-radius:2px;background:var(--ex)}
+.ebtn[aria-pressed="true"] .swatch{background:currentColor}
+.ebtn .n{font-family:var(--font-mono);font-size:11px;opacity:.55}
+.selwrap{margin-left:auto;display:flex;align-items:center;gap:7px;min-width:0}
+.selwrap label{font-size:12px;color:var(--ink-3)}
+#grp{
+  font-family:var(--font-ui);font-size:12.5px;font-weight:600;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);
+  padding:6px 9px;cursor:pointer;max-width:190px;
+}
+
+/* ============================ 双栏 ============================ */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) var(--inspector-w);gap:26px;align-items:start;padding-top:22px}
+
+/* ============================ 品种矩阵 ============================ */
+.board{min-width:0}
+.board__status{
+  display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+  font-size:12.5px;color:var(--ink-3);padding-bottom:9px;
+  border-bottom:1px solid var(--line);margin-bottom:6px;
+}
+.board__status b{font-family:var(--font-mono);font-weight:600;color:var(--ink-2)}
+.exsec{margin-top:22px}
+.exsec__head{
+  display:flex;align-items:baseline;gap:10px;
+  padding:0 0 8px;border-bottom:1px solid var(--line-2);
+}
+.exsec__bar{width:4px;height:14px;flex:none;background:var(--ex);border-radius:1px;align-self:center}
+.exsec__name{font-size:14.5px;font-weight:700}
+.exsec__en{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--ink-3);letter-spacing:.04em}
+.exsec__n{margin-left:auto;font-family:var(--font-mono);font-size:11.5px;color:var(--ink-3)}
+
+.vgrid{display:grid;grid-template-columns:repeat(var(--cols,6),minmax(0,1fr));gap:0}
+.vitem{
+  position:relative;display:block;text-align:left;width:100%;
+  background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--ex);
+  border-radius:0;margin:-1px 0 0 -1px;padding:9px 11px 10px;
+  cursor:pointer;transition:background .12s,box-shadow .12s;
+}
+.vitem:hover{background:var(--sunken);z-index:2}
+.vitem[aria-current="true"]{
+  background:var(--rule);border-color:var(--rule);border-left-color:var(--ex);z-index:3;
+}
+.vitem[aria-current="true"] .v-nm,.vitem[aria-current="true"] .v-cd{color:var(--paper)}
+[data-theme="dark"] .vitem[aria-current="true"] .v-nm,
+[data-theme="dark"] .vitem[aria-current="true"] .v-cd{color:#0D1420}
+.vitem:focus-visible{z-index:4}
+.v-nm{display:block;font-size:13.5px;font-weight:650;letter-spacing:-.1px;line-height:1.35}
+.vitem[data-fav="1"] .v-nm{padding-right:13px}
+.v-r2{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:5px;min-height:17px}
+.v-cd{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ex)}
+.v-flags{display:flex;gap:3px}
+.flag{
+  font-size:9.5px;font-weight:700;line-height:1;padding:3px 4px;border-radius:2px;
+  letter-spacing:.04em;border:1px solid currentColor;
+}
+.flag.new{color:var(--czce)}
+.flag.night{color:var(--cffex)}
+.vitem[aria-current="true"] .flag{color:var(--paper);border-color:color-mix(in oklab,var(--paper) 45%,transparent)}
+[data-theme="dark"] .vitem[aria-current="true"] .flag{color:#0D1420;border-color:rgba(13,20,32,.4)}
+.vitem .star{
+  position:absolute;top:5px;right:5px;width:16px;height:16px;
+  display:none;place-items:center;color:var(--czce);
+}
+.vitem .star svg{width:11px;height:11px;fill:currentColor;stroke:none}
+.vitem[data-fav="1"] .star{display:grid}
+.vitem[aria-current="true"] .star{color:var(--paper)}
+[data-theme="dark"] .vitem[aria-current="true"] .star{color:#0D1420}
+.hl{background:color-mix(in oklab,var(--focus) 24%,transparent);border-radius:2px;padding:0 1px}
+
+.empty{
+  padding:56px 22px;text-align:center;color:var(--ink-3);
+  border:1px dashed var(--line-2);border-radius:var(--r);background:var(--surface);
+}
+.empty b{display:block;font-size:15px;font-weight:700;color:var(--ink-2);margin-bottom:5px}
+.empty button{
+  margin-top:14px;background:var(--surface);border:1px solid var(--line-2);
+  border-radius:var(--r);padding:7px 14px;font-size:12.5px;font-weight:600;
+  color:var(--ink-2);cursor:pointer;
+}
+.empty button:hover{border-color:var(--rule);color:var(--ink)}
+
+/* ============================ 详情面板 ============================ */
+.inspector{
+  position:sticky;top:calc(var(--tools-h,118px) + 16px);
+  background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);
+  box-shadow:var(--shadow);
+  max-height:calc(100vh - var(--tools-h,118px) - 34px);display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.inspector__empty{padding:34px 22px;text-align:center;color:var(--ink-3);font-size:13px}
+.inspector__empty svg{width:26px;height:26px;opacity:.4;margin-bottom:10px}
+
+.insp__head{
+  padding:15px 16px 13px;border-bottom:1px solid var(--line);
+  border-top:3px solid var(--ex);flex:none;
+}
+.insp__top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.insp__badge{
+  font-size:10.5px;font-weight:700;letter-spacing:.04em;
+  background:var(--ex);color:#fff;border-radius:2px;padding:3px 7px;
+}
+[data-theme="dark"] .insp__badge{color:#0D1420}
+.insp__code{
+  font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.04em;
+  color:var(--ex);border:1px solid currentColor;border-radius:2px;padding:2px 6px;
+}
+.insp__fav{
+  margin-left:auto;background:transparent;border:1px solid var(--line-2);
+  border-radius:var(--r);padding:4px 9px;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  transition:border-color .14s,color .14s;
+}
+.insp__fav:hover{border-color:var(--rule);color:var(--ink)}
+.insp__fav svg{width:12px;height:12px}
+.insp__fav[aria-pressed="true"]{color:var(--czce);border-color:var(--czce)}
+.insp__fav[aria-pressed="true"] svg{fill:currentColor}
+.insp__name{font-size:21px;font-weight:800;letter-spacing:-.2px;margin-top:9px;line-height:1.25}
+.insp__meta{font-size:12px;color:var(--ink-3);margin-top:4px}
+
+.insp__acts{display:flex;gap:7px;flex:none;padding:11px 16px;border-bottom:1px solid var(--line);background:var(--sunken)}
+.abtn{
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);
+  border-radius:var(--r);padding:7px 11px;font-size:12px;font-weight:650;
+  cursor:pointer;white-space:nowrap;transition:border-color .14s,color .14s,background .14s;
+}
+.abtn:hover{border-color:var(--rule);color:var(--ink)}
+.abtn--primary{background:var(--rule);border-color:var(--rule);color:var(--paper);flex:1}
+[data-theme="dark"] .abtn--primary{color:#0D1420}
+.abtn--primary:hover{background:var(--rule);color:var(--paper);opacity:.88}
+.abtn--icon{padding:7px 9px;display:grid;place-items:center}
+.abtn--icon svg{width:13px;height:13px}
+
+.insp__body{overflow-y:auto;padding:6px 16px 18px;flex:1;min-height:0}
+.lgroup{padding-top:15px}
+.lgroup__head{
+  display:flex;align-items:center;gap:8px;
+  font-size:11.5px;font-weight:700;letter-spacing:.02em;color:var(--ink-2);
+  padding-bottom:7px;border-bottom:1px solid var(--line);
+}
+.lgroup__dot{width:7px;height:7px;flex:none;border-radius:1px;background:var(--gc)}
+.lgroup__n{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);font-weight:500}
+.lrow{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:8px 2px;border-bottom:1px solid var(--line);
+  text-decoration:none;background:transparent;border-left:0;border-right:0;border-top:0;
+  cursor:pointer;transition:padding-left .14s,color .14s;
+}
+.lrow:hover{padding-left:7px;color:var(--gc)}
+.lrow__ic{
+  width:24px;height:24px;flex:none;border-radius:2px;display:grid;place-items:center;
+  font-size:11px;font-weight:700;color:#fff;background:var(--gc);
+}
+[data-theme="dark"] .lrow__ic{color:#0D1420}
+.lrow__tx{min-width:0;flex:1}
+.lrow__t1{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow__t2{display:block;font-size:10.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.lrow__go{width:11px;height:11px;flex:none;color:var(--ink-3);opacity:0;transition:opacity .14s}
+.lrow:hover .lrow__go,.lrow:focus-visible .lrow__go{opacity:1;color:var(--gc)}
+.lrow[aria-disabled="true"]{opacity:.42;cursor:not-allowed}
+.lrow[aria-disabled="true"]:hover{padding-left:2px;color:inherit}
+.lrow[aria-disabled="true"] .lrow__ic{background:var(--line-2)}
+
+.insp__foot{
+  flex:none;padding:9px 16px;border-top:1px solid var(--line);background:var(--sunken);
+  font-size:11px;color:var(--ink-3);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+
+/* ============================ 页脚 ============================ */
+.foot{
+  margin-top:40px;padding-top:22px;border-top:2px solid var(--rule);
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:32px;
+}
+.foot h3{font-size:13px;font-weight:700;margin-bottom:11px}
+.foot__links{display:flex;flex-wrap:wrap;gap:6px}
+.foot__links a{
+  border:1px solid var(--line-2);border-radius:var(--r);padding:6px 11px;
+  background:var(--surface);font-size:12px;font-weight:600;color:var(--ink-2);
+  text-decoration:none;transition:border-color .14s,color .14s;
+}
+.foot__links a:hover{border-color:var(--rule);color:var(--ink)}
+.disc{font-size:11.5px;color:var(--ink-3);line-height:1.75}
+.disc b{color:var(--ink-2)}
+.disc p + p{margin-top:8px}
+
+/* ============================ toast / 遮罩 ============================ */
+#toast{
+  position:fixed;left:50%;bottom:30px;transform:translate(-50%,14px);
+  background:var(--rule);color:var(--paper);
+  border-radius:var(--r);padding:10px 18px;font-size:13px;font-weight:600;
+  box-shadow:var(--shadow);opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;z-index:90;max-width:calc(100vw - 32px);
+}
+[data-theme="dark"] #toast{color:#0D1420}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.scrim{position:fixed;inset:0;background:rgba(9,13,19,.5);z-index:60}
+
+/* ============================ 响应式 ============================ */
+@media (max-width:1180px){
+  :root{--inspector-w:344px;--cols:5}
+  .app{padding:0 20px 40px}
+}
+@media (max-width:1000px){
+  .cols{grid-template-columns:1fr;gap:22px}
+  .mast{padding-top:24px}
+  .mast__right{gap:18px}
+  .readout{gap:18px}
+  .readout dd{font-size:20px}
+  .foot{grid-template-columns:1fr;gap:22px}
+
+  /* 详情改为底部抽屉 */
+  .inspector{
+    position:fixed;left:0;right:0;bottom:0;top:auto;z-index:70;
+    max-height:82vh;border-radius:10px 10px 0 0;border:0;
+    box-shadow:0 -18px 50px -20px rgba(9,13,19,.55);
+    transform:translateY(101%);transition:transform .26s cubic-bezier(.2,.7,.3,1);
+    visibility:hidden;
+  }
+  .inspector[data-open="1"]{transform:translateY(0);visibility:visible}
+  .insp__head{padding-top:13px}
+  .insp__head::before{
+    content:"";display:block;width:38px;height:3px;border-radius:2px;
+    background:var(--line-2);margin:0 auto 11px;
+  }
+  body.drawer-open{overflow:hidden}
+  .selwrap{margin-left:0}
+}
+@media (max-width:640px){
+  :root{--cols:3}
+  .app{padding:0 14px 34px}
+  .mast{padding:20px 0 15px;gap:14px}
+  .mark{width:40px;height:40px;border-radius:8px}
+  .mark svg{width:21px;height:21px}
+  .readout dt{font-size:11px}
+  .readout dd{font-size:18px}
+  .u-sm-hide{display:none}
+
+  .board__status{font-size:13px}
+  .exsec__name{font-size:14px}
+  .exsec__en{font-size:11.5px}
+  .exsec__n{font-size:12px}
+  .vitem{padding:8px 9px 10px}
+  .v-nm{font-size:13.5px}
+  .v-cd{font-size:11.5px}
+  .flag{font-size:11px}
+
+  .tools{padding:9px 0}
+  .search{flex:1 1 auto;width:100%}
+  #q{font-size:16px;padding:8px 58px 8px 34px}
+  .search kbd{font-size:11px}
+  .seg{flex:1 1 auto;width:100%;overflow-x:auto}
+  .seg button{flex:1;padding:7px 6px;font-size:12.5px;white-space:nowrap}
+  .selwrap{order:-1;margin-left:0;flex:none;gap:5px}
+  .selwrap label{font-size:11.5px}
+  #grp{max-width:126px;padding:7px 7px;font-size:12.5px}
+  .exrow{
+    flex:1 1 auto;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:1px;
+    -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent);
+    mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent);
+  }
+  .ebtn{flex:none;padding:7px 10px;font-size:12px}
+  .ebtn .n{font-size:12px}
+
+  .foot__links a{padding:9px 12px;font-size:12.5px}
+  .disc{font-size:12.5px}
+
+  .insp__name{font-size:19px}
+  .insp__meta{font-size:12.5px}
+  .lrow{padding:9px 2px}
+  .lrow__t1{font-size:13.5px}
+  .lrow__t2{font-size:11.5px}
+  .abtn{font-size:12.5px;padding:8px 12px}
+  .abtn--icon{padding:8px 11px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+@media print{
+  .tools,.iconbtn,.insp__acts{display:none}
+  .inspector{position:static;max-height:none;box-shadow:none;border-radius:0}
+}
+</style>
+<script>
+/* 尽早定下配色，避免深色模式下的白屏闪烁 */
+(function(){
+  try{
+    var m = localStorage.getItem('futures-nav-theme-v1') || 'auto';
+    var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var el = document.documentElement;
+    el.setAttribute('data-theme', m === 'auto' ? (d ? 'dark' : 'light') : m);
+    el.setAttribute('data-theme-mode', m);
+  }catch(e){}
+})();
+</script>
+</head>
+<body>
+<div class="app">
+  <header class="mast">
+    <div class="mast__id">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <g fill="currentColor">
+            <rect x="3" y="4" width="5.4" height="3.6" rx=".9"/>
+            <rect x="9.3" y="4" width="5.4" height="3.6" rx=".9" opacity=".5"/>
+            <rect x="15.6" y="4" width="5.4" height="3.6" rx=".9"/>
+            <rect x="3" y="10.2" width="5.4" height="3.6" rx=".9" opacity=".5"/>
+            <rect x="9.3" y="10.2" width="5.4" height="3.6" rx=".9"/>
+            <rect x="15.6" y="10.2" width="5.4" height="3.6" rx=".9" opacity=".5"/>
+            <rect x="3" y="16.4" width="5.4" height="3.6" rx=".9"/>
+            <rect x="9.3" y="16.4" width="5.4" height="3.6" rx=".9" opacity=".5"/>
+            <rect x="15.6" y="16.4" width="5.4" height="3.6" rx=".9"/>
+          </g>
+        </svg>
+      </span>
+      <div>
+        <h1>期货品种资讯导航</h1>
+        <p class="mast__sub">选定品种，直达行情 · 持仓龙虎榜 · 股吧 · 专家问答 · 视频搜索</p>
+      </div>
+    </div>
+    <div class="mast__right">
+      <dl class="readout">
+        <div><dt>覆盖品种</dt><dd id="statVar">—</dd></div>
+        <div><dt>资讯入口</dt><dd id="statLink">—</dd></div>
+        <div class="u-sm-hide"><dt>交易所</dt><dd id="statEx">6</dd></div>
+      </dl>
+      <button class="iconbtn" id="themeBtn" type="button" aria-label="切换配色：跟随系统 / 浅色 / 深色" title="配色：跟随系统 / 浅色 / 深色">
+        <svg class="ic-auto" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.8a9.2 9.2 0 010 18.4z" fill="currentColor"/></svg>
+        <svg class="ic-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.3"/><path d="M12 2.4v2.1M12 19.5v2.1M4.3 4.3l1.5 1.5M18.2 18.2l1.5 1.5M2.4 12h2.1M19.5 12h2.1M4.3 19.7l1.5-1.5M18.2 5.8l1.5-1.5"/></svg>
+        <svg class="ic-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M20.2 14.6A8.6 8.6 0 019.4 3.8a8.6 8.6 0 1010.8 10.8z"/></svg>
+      </button>
+    </div>
+  </header>
+</div>
+
+<div class="toolswrap">
+  <div class="app">
+    <div class="tools">
+      <div class="tools__row">
+        <div class="search" id="searchBox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+          <input id="q" type="search" placeholder="搜品种、代码或板块，如 碳酸锂 / LC / lc" autocomplete="off" aria-label="搜索品种">
+          <kbd aria-hidden="true">/</kbd>
+          <button id="clr" type="button" aria-label="清空搜索">×</button>
+        </div>
+        <div class="seg" id="seg" role="group" aria-label="筛选条件">
+          <button type="button" data-m="all" aria-pressed="true">全部</button>
+          <button type="button" data-m="night" aria-pressed="false">夜盘</button>
+          <button type="button" data-m="new" aria-pressed="false">新上市</button>
+          <button type="button" data-m="fav" aria-pressed="false">收藏<span class="cnt" id="favN">0</span></button>
+        </div>
+      </div>
+      <div class="tools__row">
+        <div class="exrow" id="exrow"></div>
+        <div class="selwrap">
+          <label for="grp">板块</label>
+          <select id="grp"><option value="all">全部板块</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="cols">
+    <main class="board" id="board" aria-label="品种矩阵"></main>
+    <aside class="inspector" id="inspector" data-open="0" aria-label="品种详情"></aside>
+  </div>
+
+  <footer class="foot">
+    <div>
+      <h3>交易所官网 · 权威规则与公告</h3>
+      <div class="foot__links">
+        <a href="https://www.shfe.com.cn/" target="_blank" rel="noopener">上海期货交易所</a>
+        <a href="https://www.ine.cn/" target="_blank" rel="noopener">上海国际能源交易中心</a>
+        <a href="http://www.dce.com.cn/" target="_blank" rel="noopener">大连商品交易所</a>
+        <a href="http://www.czce.com.cn/" target="_blank" rel="noopener">郑州商品交易所</a>
+        <a href="http://www.cffex.com.cn/" target="_blank" rel="noopener">中国金融期货交易所</a>
+        <a href="https://www.gfex.com.cn/" target="_blank" rel="noopener">广州期货交易所</a>
+        <a href="https://www.cfachina.org/" target="_blank" rel="noopener">中国期货业协会</a>
+      </div>
+    </div>
+    <div class="disc">
+      <p><b>本页是资讯跳转工具。</b>页面本身不采集、不存储、不转载任何第三方内容，所列入口全部指向各网站的公开页面，数据与观点均归原网站所有。</p>
+      <p><b>关于链接稳定性。</b>行情、持仓、股吧等页面由对应网站提供，其地址与版式可能随时调整，请以原网站展示为准。第五家会员的持仓链接使用固定的会员席位号，若券商更名或席位变更可能失效，届时以东方财富原页为准。</p>
+      <p><b>本页不构成任何投资建议。</b></p>
+    </div>
+  </footer>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div class="scrim" id="scrim" hidden></div>
+
+<script>
+/* =========================================================
+   数据层 —— 与原文完全一致，未作任何改动
+   品种: [名称, 代码, 拼音slug, 所属分组, 是否夜盘, 是否2023后新上市]
+   交易所: {id, 简称, 全称, 英文, 色, 东财ex参数, 9期前缀}
+   ========================================================= */
+const EXCHANGES = {
+  shfe: { key:'shfe', short:'上期所', name:'上海期货交易所', en:'SHFE', color:'var(--shfe)', ex:'069001005', q9:'shfe', q9x:'' },
+  ine: { key:'ine', short:'上期能源', name:'上海国际能源交易中心', en:'INE', color:'var(--ine)', ex:'069001016', q9:'ine', q9x:'' },
+  dce: { key:'dce', short:'大商所', name:'大连商品交易所', en:'DCE', color:'var(--dce)', ex:'069001007', q9:'dce', q9x:'' },
+  czce: { key:'czce', short:'郑商所', name:'郑州商品交易所', en:'CZCE', color:'var(--czce)', ex:'069001008', q9:'czce', q9x:'' },
+  cffex: { key:'cffex', short:'中金所', name:'中国金融期货交易所', en:'CFFEX', color:'var(--cffex)', ex:'069001003', q9:'cffex', q9x:'' },
+  gfex: { key:'gfex', short:'广期所', name:'广州期货交易所', en:'GFEX', color:'var(--gfex)', ex:'069001021', q9:'gfex', q9x:'' }
+};
+
+/* 分组: 用于面板里把链接按类别归拢 */
+const LINK_GROUPS = [
+  { id:'quote', label:'行情走势', color:'var(--g-quote)' },
+  { id:'board', label:'股吧讨论', color:'var(--g-board)' },
+  { id:'hold', label:'持仓龙虎榜', color:'var(--g-hold)' },
+  { id:'info', label:'资讯频道', color:'var(--g-info)' },
+  { id:'extra', label:'扩展工具', color:'var(--g-extra)' }
+];
+
+/* 会员席位（8 家常用 + 后续可扩展） */
+const MEMBERS = [
+  { name:'东证期货', id:'10123207', abbr:'东证' },
+  { name:'国泰君安', id:'10083138', abbr:'国泰' },
+  { name:'华泰期货', id:'10054000', abbr:'华泰' },
+  { name:'永安期货', id:'10102950', abbr:'永安' },
+  { name:'中信期货', id:'10058975', abbr:'中信' },
+  { name:'银河期货', id:'10106342', abbr:'银河' },
+  { name:'方正中期', id:'10069611', abbr:'方正' },
+  { name:'中泰期货', id:'10102952', abbr:'中泰' }
+];
+
+/* 品种表 */
+const V = [
+  /* ---------------- 上期所 ---------------- */
+  { ex:'shfe', name:'沪铜', code:'CU', py:'cu', group:'有色金属', night:1 },
+  { ex:'shfe', name:'沪铝', code:'AL', py:'al', group:'有色金属', night:1 },
+  { ex:'shfe', name:'沪锌', code:'ZN', py:'zn', group:'有色金属', night:1 },
+  { ex:'shfe', name:'沪铅', code:'PB', py:'pb', group:'有色金属', night:1 },
+  { ex:'shfe', name:'沪镍', code:'NI', py:'ni', group:'有色金属', night:1 },
+  { ex:'shfe', name:'沪锡', code:'SN', py:'sn', group:'有色金属', night:1 },
+  { ex:'shfe', name:'氧化铝', code:'AO', py:'ao', group:'有色金属', night:1 },
+  { ex:'shfe', name:'铸造铝合金',code:'AD', py:'ad', group:'有色金属', night:1, isNew:1 },
+  { ex:'shfe', name:'沪金', code:'AU', py:'au', group:'贵金属', night:1 },
+  { ex:'shfe', name:'沪银', code:'AG', py:'ag', group:'贵金属', night:1 },
+  { ex:'shfe', name:'螺纹钢', code:'RB', py:'rb', group:'黑色金属', night:1 },
+  { ex:'shfe', name:'线材', code:'WR', py:'wr', group:'黑色金属', night:1, noHold:1, noQ9:1 },
+  { ex:'shfe', name:'热轧卷板', code:'HC', py:'hc', group:'黑色金属', night:1 },
+  { ex:'shfe', name:'不锈钢', code:'SS', py:'ss', group:'黑色金属', night:1 },
+  { ex:'shfe', name:'燃料油', code:'FU', py:'fu', group:'能源化工', night:1 },
+  { ex:'shfe', name:'石油沥青', code:'BU', py:'bu', group:'能源化工', night:1 },
+  { ex:'shfe', name:'天然橡胶', code:'RU', py:'ru', group:'能源化工', night:1 },
+  { ex:'shfe', name:'合成橡胶', code:'BR', py:'br', group:'能源化工', night:1, isNew:1, noHold:1, noQ9:1 },
+  { ex:'shfe', name:'纸浆', code:'SP', py:'sp', group:'能源化工', night:1 },
+  { ex:'shfe', name:'胶版印刷纸',code:'OP', py:'op', group:'能源化工', night:1, isNew:1 },
+  /* ---------------- 上期能源 ---------------- */
+  { ex:'ine', name:'原油', code:'SC', py:'sc', group:'能源化工', night:1 },
+  { ex:'ine', name:'低硫燃料油', code:'LU', py:'lu', group:'能源化工', night:1 },
+  { ex:'ine', name:'20号胶', code:'NR', py:'nr', group:'能源化工', night:1 },
+  { ex:'ine', name:'国际铜', code:'BC', py:'bc', group:'有色金属', night:1 },
+  { ex:'ine', name:'集运指数(欧线)', code:'EC', py:'ec', group:'航运指数', night:0, isNew:1 },
+  /* ---------------- 大商所 ---------------- */
+  { ex:'dce', name:'豆一', code:'A', py:'a', group:'农产品', night:1 },
+  { ex:'dce', name:'豆二', code:'B', py:'b', group:'农产品', night:1 },
+  { ex:'dce', name:'豆粕', code:'M', py:'m', group:'农产品', night:1 },
+  { ex:'dce', name:'豆油', code:'Y', py:'y', group:'油脂油料', night:1 },
+  { ex:'dce', name:'棕榈油', code:'P', py:'p', group:'油脂油料', night:1 },
+  { ex:'dce', name:'玉米', code:'C', py:'c', group:'农产品', night:1 },
+  { ex:'dce', name:'淀粉', code:'CS', py:'cs', group:'农产品', night:1 },
+  { ex:'dce', name:'鸡蛋', code:'JD', py:'jd', group:'农产品', night:0 },
+  { ex:'dce', name:'生猪', code:'LH', py:'lh', group:'农产品', night:0 },
+  { ex:'dce', name:'粳米', code:'RR', py:'rr', group:'农产品', night:0, noHold:1, noQ9:1 },
+  { ex:'dce', name:'纤维板', code:'FB', py:'fb', group:'林木建材', night:0, noHold:1, noQ9:1 },
+  { ex:'dce', name:'胶合板', code:'BB', py:'bb', group:'林木建材', night:0, noHold:1, noQ9:1 },
+  { ex:'dce', name:'原木', code:'LG', py:'lg', group:'林木建材', night:0, isNew:1 },
+  { ex:'dce', name:'焦炭', code:'J', py:'j', group:'黑色金属', night:1 },
+  { ex:'dce', name:'焦煤', code:'JM', py:'jm', group:'黑色金属', night:1 },
+  { ex:'dce', name:'铁矿石', code:'I', py:'i', group:'黑色金属', night:1 },
+  { ex:'dce', name:'塑料', code:'L', py:'l', group:'能源化工', night:1 },
+  { ex:'dce', name:'聚丙烯', code:'PP', py:'pp', group:'能源化工', night:1 },
+  { ex:'dce', name:'PVC', code:'V', py:'v', group:'能源化工', night:1 },
+  { ex:'dce', name:'乙二醇', code:'EG', py:'eg', group:'能源化工', night:1 },
+  { ex:'dce', name:'苯乙烯', code:'EB', py:'eb', group:'能源化工', night:1 },
+  { ex:'dce', name:'LPG', code:'PG', py:'pg', group:'能源化工', night:1 },
+  { ex:'dce', name:'纯苯', code:'BZ', py:'bz', group:'能源化工', night:1, isNew:1 },
+  /* ---------------- 郑商所 ---------------- */
+  { ex:'czce', name:'白糖', code:'SR', py:'sr', group:'软商品', night:1 },
+  { ex:'czce', name:'棉花', code:'CF', py:'cf', group:'软商品', night:1 },
+  { ex:'czce', name:'棉纱', code:'CY', py:'cy', group:'软商品', night:1 },
+  { ex:'czce', name:'苹果', code:'AP', py:'ap', group:'农产品', night:0 },
+  { ex:'czce', name:'红枣', code:'CJ', py:'cj', group:'农产品', night:0 },
+  { ex:'czce', name:'花生', code:'PK', py:'pk', group:'农产品', night:0 },
+  { ex:'czce', name:'菜籽', code:'RS', py:'rs', group:'油脂油料', night:0 },
+  { ex:'czce', name:'菜粕', code:'RM', py:'rm', group:'油脂油料', night:1 },
+  { ex:'czce', name:'菜油', code:'OI', py:'oi', group:'油脂油料', night:1 },
+  { ex:'czce', name:'普麦', code:'PM', py:'pm', group:'农产品', night:0 },
+  { ex:'czce', name:'强麦', code:'WH', py:'wh', group:'农产品', night:0 },
+  { ex:'czce', name:'早籼稻', code:'RI', py:'ri', group:'农产品', night:0 },
+  { ex:'czce', name:'晚籼稻', code:'LR', py:'lr', group:'农产品', night:0 },
+  { ex:'czce', name:'粳稻', code:'JR', py:'jr', group:'农产品', night:0 },
+  { ex:'czce', name:'PTA', code:'TA', py:'ta', group:'能源化工', night:1 },
+  { ex:'czce', name:'甲醇', code:'MA', py:'ma', group:'能源化工', night:1 },
+  { ex:'czce', name:'动力煤', code:'ZC', py:'zc', group:'能源化工', night:1 },
+  { ex:'czce', name:'玻璃', code:'FG', py:'fg', group:'建材', night:1 },
+  { ex:'czce', name:'纯碱', code:'SA', py:'sa', group:'建材', night:1 },
+  { ex:'czce', name:'尿素', code:'UR', py:'ur', group:'能源化工', night:1 },
+  { ex:'czce', name:'短纤', code:'PF', py:'pf', group:'能源化工', night:1 },
+  { ex:'czce', name:'对二甲苯', code:'PX', py:'px', group:'能源化工', night:1, isNew:1 },
+  { ex:'czce', name:'烧碱', code:'SH', py:'sh', group:'能源化工', night:1, isNew:1 },
+  { ex:'czce', name:'瓶片', code:'PR', py:'pr', group:'能源化工', night:1, isNew:1 },
+  { ex:'czce', name:'丙烯', code:'PL', py:'pl', group:'能源化工', night:1, isNew:1 },
+  { ex:'czce', name:'硅铁', code:'SF', py:'sf', group:'铁合金', night:0 },
+  { ex:'czce', name:'锰硅', code:'SM', py:'sm', group:'铁合金', night:0 },
+  /* ---------------- 中金所 ---------------- */
+  { ex:'cffex', name:'沪深300指数', code:'IF', py:'if', group:'股指期货', night:0, sina:'IF', cffexIdx:1 },
+  { ex:'cffex', name:'上证50指数', code:'IH', py:'ih', group:'股指期货', night:0, sina:'IH', cffexIdx:1 },
+  { ex:'cffex', name:'中证500指数', code:'IC', py:'ic', group:'股指期货', night:0, sina:'IC', cffexIdx:1 },
+  { ex:'cffex', name:'中证1000指数',code:'IM', py:'im', group:'股指期货', night:0, isNew:1, sina:'IM', cffexIdx:1 },
+  { ex:'cffex', name:'二债(2年期国债)', code:'TS', py:'ts', group:'国债期货', night:0, noHold:1, noQ9:1, bond:2 },
+  { ex:'cffex', name:'五债(5年期国债)', code:'TF', py:'tf', group:'国债期货', night:0, noHold:1, noQ9:1, bond:5 },
+  { ex:'cffex', name:'十债(10年期国债)',code:'T', py:'t', group:'国债期货', night:0, noHold:1, noQ9:1, bond:10 },
+  { ex:'cffex', name:'三十债(30年期国债)',code:'TL',py:'tl', group:'国债期货', night:0, isNew:1, noHold:1, noQ9:1, bond:30 },
+  /* ---------------- 广期所 ---------------- */
+  { ex:'gfex', name:'工业硅', code:'SI', py:'si', group:'新能源金属', night:0, isNew:1 },
+  { ex:'gfex', name:'碳酸锂', code:'LC', py:'lc', group:'新能源金属', night:0, isNew:1 },
+  { ex:'gfex', name:'多晶硅', code:'PS', py:'ps', group:'新能源金属', night:0, isNew:1 },
+  { ex:'gfex', name:'铂', code:'PT', py:'pt', group:'贵金属', night:0, isNew:1 },
+  { ex:'gfex', name:'钯', code:'PD', py:'pd', group:'贵金属', night:0, isNew:1 }
+];
+
+/* GB2312 百分号编码表：新浪「专家坐堂」的 keyword 参数只认 GB2312，
+   用 UTF-8 会返回空结果。此表由各品种中文名经 GB2312 编码生成，
+   与原站 r1.html 中既有的 68 条编码逐条比对一致。 */
+const GB = {'A':'%b6%b9%d2%bb','AD':'%d6%fd%d4%ec%c2%c1%ba%cf%bd%f0','AG':'%bb%a6%d2%f8','AL':'%bb%a6%c2%c1','AO':'%d1%f5%bb%af%c2%c1','AP':'%c6%bb%b9%fb','AU':'%bb%a6%bd%f0','B':'%b6%b9%b6%fe','BB':'%bd%ba%ba%cf%b0%e5','BC':'%b9%fa%bc%ca%cd%ad','BR':'%b6%a1%b6%fe%cf%a9%bd%ba','BU':'%c1%a4%c7%e0','BZ':'%b4%bf%b1%bd','C':'%d3%f1%c3%d7','CF':'%c3%de%bb%a8','CJ':'%ba%ec%d4%e6','CS':'%b5%ed%b7%db','CU':'%bb%a6%cd%ad','CY':'%c3%de%c9%b4','EB':'%b1%bd%d2%d2%cf%a9','EC':'%c5%b7%cf%df%bc%af%d4%cb','EG':'%d2%d2%b6%fe%b4%bc','FB':'%cf%cb%ce%ac%b0%e5','FG':'%b2%a3%c1%a7','FU':'%c8%bc%d3%cd','HC':'%c8%c8%be%ed','I':'%cc%fa%bf%f3%ca%af','J':'%bd%b9%cc%bf','JD':'%bc%a6%b5%b0','JM':'%bd%b9%c3%ba','L':'%cb%dc%c1%cf','LC':'%cc%bc%cb%e1%ef%ae','LG':'%d4%ad%c4%be','LH':'%c9%fa%d6%ed','LU':'%b5%cd%c1%f2%c8%bc%d3%cd','M':'%b6%b9%c6%c9','MA':'%bc%d7%b4%bc','NI':'%bb%a6%c4%f8','NR':'%32%30%ba%c5%bd%ba','OI':'%b2%cb%d3%cd','OP':'%bd%ba%b0%e6%d3%a1%cb%a2%d6%bd','P':'%d7%d8%e9%b5%d3%cd','PB':'%bb%a6%c7%a6','PD':'%ee%d9','PF':'%b6%cc%cf%cb','PG':'%4c%50%47','PK':'%bb%a8%c9%fa','PL':'%b1%fb%cf%a9','PP':'%be%db%b1%fb%cf%a9','PR':'%c6%bf%c6%ac','PS':'%b6%e0%be%a7%b9%e8','PT':'%b2%ac','PX':'%b6%d4%b6%fe%bc%d7%b1%bd','RB':'%c2%dd%ce%c6%b8%d6','RM':'%b2%cb%c6%c9','RR':'%be%ac%c3%d7','RS':'%b2%cb%d7%d1','RU':'%cf%f0%bd%ba','SA':'%b4%bf%bc%ee','SC':'%d4%ad%d3%cd','SF':'%b9%e8%cc%fa','SH':'%c9%d5%bc%ee','SI':'%b9%a4%d2%b5%b9%e8','SM':'%c3%cc%b9%e8','SN':'%bb%a6%ce%fd','SP':'%d6%bd%bd%ac','SR':'%b0%d7%cc%c7','SS':'%b2%bb%d0%e2%b8%d6','TA':'%50%54%41','UR':'%c4%f2%cb%d8','V':'%50%56%43','WR':'%cf%df%b2%c4','Y':'%b6%b9%d3%cd','ZN':'%bb%a6%d0%bf'};
+
+/* 国债的新浪坐堂关键词（原站用的是「十债/五债/二债/三十债」这类简称） */
+const GB_BOND = { 'T':'%ca%ae%d5%ae','TF':'%ce%e5%d5%ae','TS':'%b6%fe%d5%ae','TL':'%c8%fd%ca%ae%d5%ae' };
+
+function gbKw(v){ return GB[v.code] || GB_BOND[v.code] || encodeURIComponent(v.sinaKw || v.name); }
+
+/* =========================================================
+   URL 构造器（全部集中在此，改版只改这一处）
+   ========================================================= */
+function buildLinks(v){
+  const ex = EXCHANGES[v.ex];
+  const C = v.code, c = C.toLowerCase();
+  const isIdx = !!v.cffexIdx;
+  const isBond = !!v.bond;
+  const L = [];
+
+  /* 1. 新浪主力行情：代码必须大写（实测 ag0/lc0 返回 404，AG0/LC0 正常），
+        0 后缀表示主力连续。股指(IF/IH/IC/IM)与国债(T/TF/TS/TL)同样适用。 */
+  const sinaSym = C;
+  L.push({ g:'quote', nm:'主力行情', src:'新浪财经', ic:'行',
+    url:'https://finance.sina.com.cn/futures/quotes/'+sinaSym+'0.shtml' });
+
+  /* 2. 行情总览：商品用各所分类号；股指/国债用东财专门的行情中心页
+        （这些页是 SPA 锚点，无法用 HTTP 状态码校验，故采用官方站内已确认的入口） */
+  if (v.grid) {
+    L.push({ g:'quote', nm:'多合约行情', src:'东方财富', ic:'合',
+      url:'https://quote.eastmoney.com/center/gridlist2.html#futures_'+v.grid });
+    L.push({ g:'quote', nm:'价格矩阵', src:'东方财富', ic:'矩',
+      url:'https://data.eastmoney.com/ifdata/jcjz.html#'+v.grid });
+  } else if (isBond) {
+    L.push({ g:'quote', nm:'国债行情总览', src:'东方财富', ic:'债',
+      url:'https://futures.eastmoney.com/bond.html#'+v.bond });
+  } else if (isIdx) {
+    L.push({ g:'quote', nm:'股指行情总览', src:'东方财富', ic:'指',
+      url:'https://stock.eastmoney.com/gzqh.html#'+(v.stockIdx||'300') });
+  }
+
+  /* 3. 股吧：优先用东财实际 slug，否则按拼音兜底 */
+  const gubaSlug = v.guba || v.py;
+  L.push({ g:'board', nm:'东财期货吧', src:'东方财富股吧', ic:'吧',
+    url:'https://guba.eastmoney.com/list,'+gubaSlug+'.html' });
+
+  /* 4. 持仓龙虎榜：该品种在所属交易所的 ex 参数下 */
+  if (!v.noHold && !isBond && !isIdx) {
+    L.push({ g:'hold', nm:'主力持仓', src:'东方财富', ic:'仓',
+      url:'https://data.eastmoney.com/futures/dl/data.html?ex='+ex.ex+'&va='+C });
+    MEMBERS.forEach(m=>{
+      L.push({ g:'hold', nm:m.name, src:'席位持仓', ic:m.abbr.slice(0,2),
+        url:'https://data.eastmoney.com/futures/dl/position.html?ex='+ex.ex+'&va='+C+'&me='+m.id });
+    });
+  }
+
+  /* 5. 新浪专家坐堂：keyword 需 GB2312 编码，构建时即算好 */
+  const kw = v.sinaKw || v.name.replace(/\(.*?\)/g,'');
+  L.push({ g:'info', nm:'专家坐堂', src:'新浪财经', ic:'问',
+    url:'http://biz.finance.sina.com.cn/zjzt/queryList.php?keyword='+gbKw(v)+
+        '&Submit=%CC%E1%BD%BB&answerType=1&zjztType=fuask&isToday=' });
+
+  /* 6. 东财期货频道 */
+  const chCode = v.chCode || (v.bond ? null : c);
+  if (chCode) {
+    L.push({ g:'info', nm:'东财期货频道', src:'东方财富', ic:'频',
+      url:'https://futures.eastmoney.com/qihuo/'+chCode+'.html' });
+  }
+
+  /* 7. 9期期货：站点不支持主力连续 symbol（只能写死具体合约月，会过期），
+        改用其「内盘期货行情(主力合约)」列表页，永久有效 */
+  if (!v.noQ9) {
+    L.push({ g:'extra', nm:'9期期货行情', src:'9qihuo 主力合约', ic:'K',
+      url:'https://www.9qihuo.com/hangqing' });
+  }
+
+  /* 8. 抖音搜索：用简洁的品种本名，去掉括号补充说明 */
+  const kwPick = v.dyKw || v.sinaKw || v.name.replace(/\(.*?\)/g,'');
+  L.push({ g:'extra', nm:'抖音搜索', src:'抖音', ic:'抖',
+    url:'https://www.douyin.com/search/'+encodeURIComponent(kwPick)+'?type=general' });
+
+  return L;
+}
+
+/* 各品种的抖音搜索词（与“坐堂关键词”解耦：这里用大众习惯说法） */
+const DYKW = { 'T':'十债','TF':'五债','TS':'二债','TL':'三十债',
+  'IF':'沪深300','IH':'上证50','IC':'中证500','IM':'中证1000',
+  'A':'豆一','B':'豆二','M':'豆粕','Y':'豆油','P':'棕榈油','C':'玉米','CS':'玉米淀粉','I':'铁矿石',
+  'J':'焦炭','JM':'焦煤','L':'塑料','V':'PVC','PP':'聚丙烯','EG':'乙二醇','EB':'苯乙烯','PG':'液化石油气',
+  'LH':'生猪','RR':'粳米','LG':'原木','BZ':'纯苯','BB':'胶合板','FB':'纤维板',
+  'CU':'沪铜','AL':'沪铝','ZN':'沪锌','PB':'沪铅','NI':'沪镍','SN':'沪锡','AU':'沪金','AG':'沪银',
+  'RB':'螺纹钢','WR':'线材','HC':'热卷','SS':'不锈钢','FU':'燃油','BU':'沥青','RU':'橡胶','SP':'纸浆',
+  'AO':'氧化铝','AD':'铸造铝合金','OP':'胶版印刷纸','BR':'丁二烯胶',
+  'SC':'原油','LU':'低硫燃油','NR':'20号胶','BC':'国际铜','EC':'欧线集运',
+  'SR':'白糖','CF':'棉花','CY':'棉纱','AP':'苹果','CJ':'红枣','PK':'花生','RS':'菜籽','RM':'菜粕','OI':'菜油',
+  'PM':'普麦','WH':'强麦','RI':'早籼稻','LR':'晚籼稻','JR':'粳稻','TA':'PTA','MA':'甲醇','ZC':'动力煤',
+  'FG':'玻璃','SA':'纯碱','UR':'尿素','PF':'短纤','PX':'对二甲苯','SH':'烧碱','PR':'瓶片','PL':'丙烯',
+  'SF':'硅铁','SM':'锰硅','SI':'工业硅','LC':'碳酸锂','PS':'多晶硅','PT':'铂','PD':'钯' };
+
+/* 各交易所默认 grid 号（东财分类_序号，取自原站实测） */
+const GRID = {
+  'CU':'113_1','AL':'113_2','ZN':'113_3','PB':'113_4','AU':'113_5','AG':'113_6','RB':'113_7','WR':'113_8',
+  'FU':'113_9','RU':'113_10','BU':'113_11','HC':'113_12','NI':'113_13','SN':'113_14','SP':'113_15','SS':'113_16',
+  'AO':'113_17','BR':'113_18','AD':'113_19','OP':'113_20',
+  'SC':'142_1','NR':'142_2','LU':'142_3','BC':'142_4','EC':'142_5',
+  'C':'114_1','A':'114_2','B':'114_3','M':'114_4','Y':'114_5','P':'114_6','L':'114_7','V':'114_8','J':'114_9',
+  'JM':'114_10','FB':'114_11','CS':'114_16','EG':'114_17','RR':'114_18','EB':'114_19','PG':'114_20','LH':'114_21',
+  'PP':'114_15','I':'114_13','JD':'114_14','LG':'114_22','BZ':'114_23','BB':'114_24',
+  'SR':'115_4','CF':'115_3','TA':'115_5','OI':'115_6','MA':'115_8','FG':'115_9','RS':'115_10','RM':'115_11',
+  'SF':'115_15','SM':'115_16','CY':'115_18','AP':'115_19','CJ':'115_20','UR':'115_21','SA':'115_22','PF':'115_23',
+  'PK':'115_24','PX':'115_25','SH':'115_26','PR':'115_27','PL':'115_28','ZC':'115_13',
+  'PM':'115_14','WH':'115_12','RI':'115_14','LR':'115_17','JR':'115_7',
+  'SI':'225_1','LC':'225_2','PS':'225_3','PT':'225_4','PD':'225_5'};
+
+/* 股吧 slug：东财实际使用的一批（取自原站与实测），其余按拼音 */
+const GUBA = {
+  'AO':'fshfeaos','BR':'fshfebrs','AD':'fshfeas','OP':'fshfeops',
+  'BC':'finebcs','EC':'fineecm','LU':'finelus','NR':'finenrs','SC':'finescs',
+  'EB':'fdceeb','EG':'fdceegs','LH':'fdcelhs','PG':'fdcepgs','PP':'fdcepps','RR':'fdcerrs',
+  'AP':'fczceaps','CJ':'fczcecjs','CY':'fczcecys','MA':'fczcemas','PK':'fczcepks','PX':'fczcepxs',
+  'SA':'fczcesas','SH':'fczceshs','UR':'fczceurs',
+  'LC':'fgfexlcs','SI':'fgfexsis','PS':'fgfexpss','PT':'fgfexpts','PD':'fgfexpds',
+  'T':'ts','TF':'tfs','TL':'tls','TS':'tss','IF':'if','IH':'ih','IC':'ic','IM':'im'};
+
+/* 新浪专家坐堂关键词（原站用的是 GB2312 的品种中文名，这里保留中文，运行时转码） */
+const SINAKW = { 'A':'豆一','AG':'沪银','AL':'沪铝','AO':'氧化铝','AP':'苹果','AU':'沪金','B':'豆二','BC':'国际铜',
+  'BR':'丁二烯胶','BU':'沥青','C':'玉米','CF':'棉花','CJ':'红枣','CS':'淀粉','CU':'沪铜','CY':'棉纱','EB':'苯乙烯',
+  'EC':'欧线集运','EG':'乙二醇','FB':'纤维板','FG':'玻璃','FU':'燃油','HC':'热卷','I':'铁矿石','J':'焦炭','JD':'鸡蛋',
+  'JM':'焦煤','L':'塑料','LC':'碳酸锂','LH':'生猪','LU':'低硫燃油','M':'豆粕','MA':'甲醇','NI':'沪镍','NR':'20号胶',
+  'OI':'菜油','P':'棕榈油','PB':'沪铅','PF':'短纤','PG':'LPG','PK':'花生','PP':'聚丙烯','PX':'对二甲苯','RB':'螺纹钢',
+  'RM':'菜粕','RR':'粳米','RS':'菜籽','RU':'橡胶','SA':'纯碱','SC':'原油','SF':'硅铁','SH':'烧碱','SI':'工业硅',
+  'SM':'锰硅','SN':'沪锡','SP':'纸浆','SR':'白糖','SS':'不锈钢','TA':'PTA','UR':'尿素','V':'PVC','WR':'线材',
+  'Y':'豆油','ZN':'沪锌','BB':'胶合板','LG':'原木','BZ':'纯苯','AD':'铸造铝合金','OP':'胶版印刷纸','PR':'瓶片','PL':'丙烯',
+  'PS':'多晶硅','PT':'铂','PD':'钯' };
+
+/* 东财期货频道 slug 特例（郑商所用的并非小写代码） */
+const CHEXT = { 'WT':'pm','ER':'ri','PF':'pf' };
+
+/* 组装最终结构 */
+V.forEach(v=>{
+  v.grid = GRID[v.code] || '';
+  v.guba = GUBA[v.code] || v.py;
+  v.sinaKw = SINAKW[v.code] || v.name;
+  v.dyKw = DYKW[v.code] || v.name.replace(/\(.*?\)/g,'');
+  v.stockIdx = { 'IF':'300','IH':'50','IC':'500','IM':'1000' }[v.code] || '';
+  v.chCode = CHEXT[v.code] || v.code.toLowerCase();
+  v.links = buildLinks(v);
+});
+
+/* =========================================================
+   状态与工具
+   ========================================================= */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+
+const FAV_KEY = 'futures-nav-favs-v1';
+const THEME_KEY = 'futures-nav-theme-v1';
+
+let favs = new Set();
+try { favs = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch(e){ favs = new Set(); }
+
+const state = { q:'', ex:'all', mode:'all', grp:'all', sel:null };
+
+const isNarrow = () => window.matchMedia('(max-width:1000px)').matches;
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+function hl(s){
+  const t = esc(s);
+  if(!state.q) return t;
+  const safe = state.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if(!safe) return t;
+  try { return t.replace(new RegExp('(' + safe + ')', 'ig'), '<span class="hl">$1</span>'); }
+  catch(e){ return t; }
+}
+let toastTimer = null;
+function toast(msg){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2000);
+}
+function persistFavs(){
+  try { localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(favs))); } catch(e){}
+}
+
+/* =========================================================
+   配色：跟随系统 / 浅色 / 深色
+   ========================================================= */
+const mqDark = window.matchMedia('(prefers-color-scheme: dark)');
+let themeMode = 'auto';
+try { themeMode = localStorage.getItem(THEME_KEY) || 'auto'; } catch(e){}
+
+function applyTheme(){
+  const resolved = themeMode === 'auto' ? (mqDark.matches ? 'dark' : 'light') : themeMode;
+  document.documentElement.setAttribute('data-theme', resolved);
+  document.documentElement.setAttribute('data-theme-mode', themeMode);
+}
+mqDark.addEventListener('change', () => { if(themeMode === 'auto') applyTheme(); });
+$('#themeBtn').addEventListener('click', () => {
+  themeMode = themeMode === 'auto' ? 'light' : (themeMode === 'light' ? 'dark' : 'auto');
+  try { localStorage.setItem(THEME_KEY, themeMode); } catch(e){}
+  applyTheme();
+  toast('配色：' + ({ auto:'跟随系统', light:'浅色', dark:'深色' })[themeMode]);
+});
+
+/* =========================================================
+   筛选
+   ========================================================= */
+function matchQ(v){
+  if(!state.q) return true;
+  const q = state.q.toLowerCase();
+  const ex = EXCHANGES[v.ex];
+  return v.name.toLowerCase().indexOf(q) > -1
+      || v.code.toLowerCase().indexOf(q) > -1
+      || (v.py || '').toLowerCase().indexOf(q) > -1
+      || (v.group || '').toLowerCase().indexOf(q) > -1
+      || ex.short.indexOf(state.q) > -1
+      || ex.name.indexOf(state.q) > -1;
+}
+function passes(v){
+  if(state.ex !== 'all' && v.ex !== state.ex) return false;
+  if(state.grp !== 'all' && v.group !== state.grp) return false;
+  if(state.mode === 'night' && !v.night) return false;
+  if(state.mode === 'new' && !v.isNew) return false;
+  if(state.mode === 'fav' && !favs.has(v.code)) return false;
+  return matchQ(v);
+}
+
+function renderExchangeButtons(){
+  const row = $('#exrow');
+  let h = '<button class="ebtn" type="button" data-ex="all" aria-pressed="' +
+          (state.ex === 'all' ? 'true' : 'false') + '">全部交易所</button>';
+  Object.values(EXCHANGES).forEach(e => {
+    const n = V.filter(v => v.ex === e.key).length;
+    h += '<button class="ebtn" type="button" data-ex="' + e.key + '" style="--ex:' + e.color + '"' +
+         ' aria-pressed="' + (state.ex === e.key ? 'true' : 'false') + '">' +
+         '<span class="swatch"></span>' + esc(e.short) + '<span class="n">' + n + '</span></button>';
+  });
+  row.innerHTML = h;
+}
+function renderGroupOptions(){
+  const groups = [];
+  V.forEach(v => { if(groups.indexOf(v.group) < 0) groups.push(v.group); });
+  groups.sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'));
+  $('#grp').innerHTML = '<option value="all">全部板块</option>' +
+    groups.map(g => '<option value="' + esc(g) + '">' + esc(g) + '</option>').join('');
+}
+
+/* =========================================================
+   品种矩阵
+   ========================================================= */
+const STAR_PATH = 'M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.6L12 17.6 6.1 20.7l1.2-6.6L2.5 9.5l6.6-.9z';
+
+function renderBoard(){
+  const host = $('#board');
+  const list = V.filter(passes);
+  const links = list.reduce((a, v) => a + v.links.filter(l => l.url).length, 0);
+
+  let html = '<div class="board__status"><span>显示 <b>' + list.length + '</b> / <b>' + V.length +
+             '</b> 个品种</span><span>共 <b>' + links + '</b> 个资讯入口</span></div>';
+
+  if(!list.length){
+    host.innerHTML = html +
+      '<div class="empty"><b>没有符合条件的品种</b>换个关键词，或放宽交易所、板块与条件筛选。' +
+      '<div><button type="button" id="resetAll">重置全部筛选</button></div></div>';
+    $('#resetAll').addEventListener('click', resetFilters);
+    return;
+  }
+
+  Object.values(EXCHANGES).forEach(e => {
+    const items = list.filter(v => v.ex === e.key);
+    if(!items.length) return;
+    html += '<section class="exsec"><h2 class="exsec__head">' +
+      '<span class="exsec__bar" style="background:' + e.color + '"></span>' +
+      '<span class="exsec__name">' + esc(e.name) + '</span>' +
+      '<span class="exsec__en">' + esc(e.en) + '</span>' +
+      '<span class="exsec__n">' + items.length + ' 个品种</span></h2><div class="vgrid">';
+    items.forEach(v => {
+      const flags = [];
+      if(v.isNew) flags.push('<span class="flag new">新</span>');
+      if(v.night) flags.push('<span class="flag night">夜</span>');
+      html += '<button class="vitem" type="button" data-code="' + v.code + '"' +
+        ' data-fav="' + (favs.has(v.code) ? 1 : 0) + '"' +
+        ' aria-current="' + (state.sel === v.code ? 'true' : 'false') + '"' +
+        ' style="--ex:' + e.color + '"' +
+        ' aria-label="' + esc(v.name + ' ' + v.code + '，' + e.short + '，' + v.links.filter(l => l.url).length + ' 个资讯入口') + '">' +
+        '<span class="star" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + STAR_PATH + '"/></svg></span>' +
+        '<span class="v-nm">' + hl(v.name) + '</span>' +
+        '<span class="v-r2"><span class="v-cd">' + hl(v.code) + '</span>' +
+        '<span class="v-flags">' + flags.join('') + '</span></span></button>';
+    });
+    html += '</div></section>';
+  });
+
+  host.innerHTML = html;
+}
+
+/* 选中态只改属性，不整块重绘 —— 保住滚动位置与键盘焦点 */
+function syncSelection(){
+  $$('#board .vitem').forEach(b => {
+    b.setAttribute('aria-current', b.dataset.code === state.sel ? 'true' : 'false');
+  });
+}
+function syncFav(code){
+  const b = $('#board .vitem[data-code="' + code + '"]');
+  if(b) b.dataset.fav = favs.has(code) ? '1' : '0';
+  $('#favN').textContent = favs.size;
+}
+
+/* =========================================================
+   详情面板
+   ========================================================= */
+function syncDrawer(){
+  const has = !!state.sel;
+  $('#inspector').dataset.open = has ? '1' : '0';
+  const showScrim = has && isNarrow();
+  $('#scrim').hidden = !showScrim;
+  document.body.classList.toggle('drawer-open', showScrim);
+}
+
+function renderInspector(){
+  const host = $('#inspector');
+  const v = state.sel ? V.filter(x => x.code === state.sel)[0] : null;
+
+  if(!v){
+    host.innerHTML = '<div class="inspector__empty">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+      '<rect x="3" y="3" width="7.4" height="7.4" rx="1.4"/><rect x="13.6" y="3" width="7.4" height="7.4" rx="1.4"/>' +
+      '<rect x="3" y="13.6" width="7.4" height="7.4" rx="1.4"/><rect x="13.6" y="13.6" width="7.4" height="7.4" rx="1.4"/></svg>' +
+      '<div>从品种矩阵里选一个品种，这里会列出它的全部资讯入口。</div></div>';
+    syncDrawer();
+    return;
+  }
+
+  const ex = EXCHANGES[v.ex];
+  const usable = v.links.filter(l => l.url);
+  const primary = v.links.filter(l => l.nm === '主力行情')[0] || usable[0];
+
+  let groups = '';
+  LINK_GROUPS.forEach(g => {
+    const items = v.links.filter(l => l.g === g.id);
+    if(!items.length) return;
+    groups += '<div class="lgroup" style="--gc:' + g.color + '"><h3 class="lgroup__head">' +
+      '<span class="lgroup__dot"></span>' + esc(g.label) +
+      '<span class="lgroup__n">' + items.length + '</span></h3>';
+    items.forEach(l => {
+      const body = '<span class="lrow__ic" aria-hidden="true">' + esc(l.ic) + '</span>' +
+        '<span class="lrow__tx"><span class="lrow__t1">' + esc(l.nm) + '</span>' +
+        '<span class="lrow__t2">' + esc(l.src) + '</span></span>' +
+        '<svg class="lrow__go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"' +
+        ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>';
+      groups += l.url
+        ? '<a class="lrow" style="--gc:' + g.color + '" href="' + esc(l.url) + '" target="_blank" rel="noopener"' +
+          ' title="' + esc(l.nm + ' · ' + l.src) + '">' + body + '</a>'
+        : '<span class="lrow" style="--gc:' + g.color + '" aria-disabled="true"' +
+          ' title="' + esc(l.nm + ' · 暂无可用入口') + '">' + body + '</span>';
+    });
+    groups += '</div>';
+  });
+
+  const meta = [ex.name, v.group];
+  meta.push(v.isNew ? '2023 年后上市' : '');
+  meta.push(v.night ? '有夜盘' : '无夜盘');
+
+  const isFav = favs.has(v.code);
+  host.innerHTML =
+    '<div class="insp__head" style="--ex:' + ex.color + '">' +
+      '<div class="insp__top">' +
+        '<span class="insp__badge">' + esc(ex.short) + '</span>' +
+        '<span class="insp__code">' + esc(v.code) + '</span>' +
+        '<button class="insp__fav" type="button" id="favBtn" aria-pressed="' + (isFav ? 'true' : 'false') + '">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + STAR_PATH + '"/></svg>' +
+          '<span id="favLabel">' + (isFav ? '已收藏' : '收藏') + '</span></button>' +
+      '</div>' +
+      '<h2 class="insp__name">' + esc(v.name) + '</h2>' +
+      '<div class="insp__meta">' + esc(meta.filter(Boolean).join(' · ')) + '</div>' +
+    '</div>' +
+    '<div class="insp__acts">' +
+      '<button class="abtn abtn--primary" type="button" id="openPrimary">打开主力行情</button>' +
+      '<button class="abtn" type="button" id="openAll">全部打开 <span class="num">' + usable.length + '</span></button>' +
+      '<button class="abtn abtn--icon" type="button" id="copyAll" title="复制全部链接" aria-label="复制全部链接">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true">' +
+        '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg></button>' +
+      '<button class="abtn abtn--icon" type="button" id="closeInsp" title="收起面板" aria-label="收起面板">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M6 9l6 6 6-6"/></svg></button>' +
+    '</div>' +
+    '<div class="insp__body">' + groups + '</div>' +
+    '<div class="insp__foot"><span>共 ' + v.links.length + ' 个入口</span><span>在新标签页打开</span></div>';
+
+  $('#favBtn').addEventListener('click', () => toggleFav(v.code));
+  $('#openPrimary').addEventListener('click', () => openUrls([primary.url], '主力行情'));
+  $('#openAll').addEventListener('click', () => openUrls(usable.map(l => l.url), v.name, true));
+  $('#copyAll').addEventListener('click', () => {
+    copyText(usable.map(l => l.nm + '\t' + l.url).join('\n'), v.name + ' 的 ' + usable.length + ' 个链接');
+  });
+  $('#closeInsp').addEventListener('click', closeInspector);
+
+  syncDrawer();
+}
+
+function selectVariety(code){
+  state.sel = code;
+  syncSelection();
+  renderInspector();
+  writeHash(code);
+}
+function closeInspector(){
+  state.sel = null;
+  syncSelection();
+  renderInspector();
+  writeHash(null);
+}
+
+/* 地址栏 #代码 深链 —— 可分享、可收藏，浏览器前进后退也能用 */
+function codeFromHash(){
+  const raw = location.hash.replace(/^#/, '');
+  if(!raw) return null;
+  let h = raw;
+  try { h = decodeURIComponent(raw); } catch(e){}
+  h = h.trim().toLowerCase();
+  if(!h) return null;
+  const hit = V.filter(x => x.code.toLowerCase() === h)[0];
+  return hit ? hit.code : null;
+}
+function writeHash(code){
+  const want = code ? '#' + code : '';
+  if(location.hash === want) return;
+  try {
+    if(code) history.pushState(null, '', '#' + code);
+    else history.replaceState(null, '', location.pathname + location.search);
+  } catch(e){
+    location.hash = code || '';
+  }
+}
+function syncFromHash(){
+  const code = codeFromHash();
+  if(code === state.sel) return;
+  state.sel = code;
+  syncSelection();
+  renderInspector();
+}
+window.addEventListener('hashchange', syncFromHash);
+window.addEventListener('popstate', syncFromHash);
+
+/* =========================================================
+   动作
+   ========================================================= */
+function openUrls(urls, label, ask){
+  const list = urls.filter(Boolean);
+  if(!list.length){ toast('这个品种没有可用的入口'); return; }
+  if(ask && list.length > 4 &&
+     !window.confirm('将同时打开 ' + list.length + ' 个标签页，浏览器可能会拦截。继续吗？')) return;
+  list.forEach((u, i) => setTimeout(() => window.open(u, '_blank', 'noopener'), i * 110));
+  toast(list.length === 1 ? '正在打开「' + label + '」' : '正在打开 ' + list.length + ' 个页面');
+}
+
+function copyText(text, what){
+  const ok = () => toast('已复制' + what);
+  const fail = () => toast('复制失败，请手动选择文本复制');
+  const legacy = () => {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta);
+      ta.select();
+      const done = document.execCommand('copy');
+      document.body.removeChild(ta);
+      done ? ok() : fail();
+    } catch(e){ fail(); }
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(ok, legacy);
+  } else legacy();
+}
+
+function toggleFav(code){
+  const v = V.filter(x => x.code === code)[0];
+  if(!v) return;
+  if(favs.has(code)){ favs.delete(code); toast('已取消收藏「' + v.name + '」'); }
+  else { favs.add(code); toast('已收藏「' + v.name + '」'); }
+  persistFavs();
+  syncFav(code);
+  if(state.sel === code){
+    const btn = $('#favBtn');
+    if(btn){
+      btn.setAttribute('aria-pressed', favs.has(code) ? 'true' : 'false');
+      $('#favLabel').textContent = favs.has(code) ? '已收藏' : '收藏';
+    }
+  }
+  if(state.mode === 'fav') renderBoard();
+}
+
+function resetFilters(){
+  state.q = ''; state.ex = 'all'; state.mode = 'all'; state.grp = 'all'; state.sel = null;
+  const qEl = $('#q');
+  qEl.value = '';
+  $('#searchBox').classList.remove('has-val');
+  $('#grp').value = 'all';
+  $$('#seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === 'all' ? 'true' : 'false'));
+  renderExchangeButtons();
+  renderBoard();
+  renderInspector();
+}
+
+/* =========================================================
+   事件
+   ========================================================= */
+const qEl = $('#q');
+let qTimer = null;
+qEl.addEventListener('input', () => {
+  const val = qEl.value;
+  $('#searchBox').classList.toggle('has-val', !!val);
+  clearTimeout(qTimer);
+  qTimer = setTimeout(() => { state.q = val.trim(); renderBoard(); }, 110);
+});
+$('#clr').addEventListener('click', () => {
+  qEl.value = '';
+  state.q = '';
+  $('#searchBox').classList.remove('has-val');
+  qEl.focus();
+  renderBoard();
+});
+
+$('#exrow').addEventListener('click', e => {
+  const b = e.target.closest('.ebtn');
+  if(!b) return;
+  state.ex = b.dataset.ex;
+  $$('#exrow .ebtn').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  renderBoard();
+});
+$('#grp').addEventListener('change', e => { state.grp = e.target.value; renderBoard(); });
+$('#seg').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if(!b) return;
+  state.mode = b.dataset.m;
+  $$('#seg button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  renderBoard();
+});
+$('#board').addEventListener('click', e => {
+  const b = e.target.closest('.vitem');
+  if(!b) return;
+  if(state.sel === b.dataset.code){ closeInspector(); return; }
+  selectVariety(b.dataset.code);
+});
+$('#scrim').addEventListener('click', closeInspector);
+
+document.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  const typing = tag === 'input' || tag === 'select' || tag === 'textarea';
+
+  if(e.key === '/' && !typing && !e.metaKey && !e.ctrlKey){
+    e.preventDefault();
+    qEl.focus();
+    qEl.select();
+    return;
+  }
+  if(e.key === 'Escape'){
+    if(typing && qEl.value){ $('#clr').click(); return; }
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    if(state.sel) closeInspector();
+    return;
+  }
+  if(typing) return;
+
+  const cur = e.target.closest && e.target.closest('.vitem');
+  if(!cur) return;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.key) < 0) return;
+
+  const items = $$('#board .vitem');
+  const i = items.indexOf(cur);
+  if(i < 0) return;
+  let j;
+  if(e.key === 'ArrowLeft') j = i - 1;
+  else if(e.key === 'ArrowRight') j = i + 1;
+  else {
+    const perRow = countPerRow(items);
+    j = e.key === 'ArrowUp' ? i - perRow : i + perRow;
+  }
+  if(j < 0 || j >= items.length) return;
+  e.preventDefault();
+  items[j].focus();
+});
+
+function countPerRow(items){
+  if(!items.length) return 1;
+  const top = items[0].offsetTop;
+  let n = 0;
+  for(let k = 0; k < items.length; k++){
+    if(items[k].offsetTop === top) n++;
+    else break;
+  }
+  return Math.max(1, n);
+}
+
+/* =========================================================
+   启动
+   ========================================================= */
+applyTheme();
+$('#statVar').textContent = V.length;
+$('#statLink').textContent = V.reduce((a, v) => a + v.links.length, 0);
+$('#favN').textContent = favs.size;
+state.sel = codeFromHash();
+renderExchangeButtons();
+renderGroupOptions();
+renderBoard();
+renderInspector();
+
+/* 工具条真实高度 → 供右侧粘性面板定位 */
+(function(){
+  const wrap = $('.toolswrap');
+  if(!wrap) return;
+  const sync = () => document.documentElement.style.setProperty('--tools-h', wrap.offsetHeight + 'px');
+  sync();
+  window.addEventListener('resize', () => { sync(); syncDrawer(); }, { passive:true });
+  if(window.ResizeObserver) new ResizeObserver(sync).observe(wrap);
+})();
+</script>
+</body>
+</html>
