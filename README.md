@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/logo.png" width="120" alt="futures-variety-nav"></p>
+
 # 期货品种资讯导航
 
 国内商品与金融期货品种的资讯跳转工具。选定一个品种，一键直达它的**行情、持仓龙虎榜、股吧讨论、专家问答与视频搜索**入口。
